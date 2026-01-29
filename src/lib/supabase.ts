@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Failed Startups API configuration
-const FAILED_STARTUPS_URL = 'https://lentxykytbylpxytluic.supabase.co';
-const FAILED_STARTUPS_KEY = 'sb_publishable_W5UgIXv8SGHeo43duatMCw_0h8GbgCY';
+// Failed Startups API configuration - Use environment variables
+const FAILED_STARTUPS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://lentxykytbylpxytluic.supabase.co';
+const FAILED_STARTUPS_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_W5UgIXv8SGHeo43duatMCw_0h8GbgCY';
 
 export const failedStartupsClient = createClient(FAILED_STARTUPS_URL, FAILED_STARTUPS_KEY);
 

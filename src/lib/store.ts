@@ -58,6 +58,10 @@ interface AppState {
     startupIdeas: StartupIdea[];
     setStartupIdeas: (ideas: StartupIdea[]) => void;
 
+    // Auth
+    isLoggedIn: boolean;
+    setIsLoggedIn: (value: boolean) => void;
+
     // Search & Filter
     searchQuery: string;
     setSearchQuery: (query: string) => void;
@@ -89,6 +93,11 @@ export const useAppStore = create<AppState>((set) => ({
     // Startup Ideas
     startupIdeas: [],
     setStartupIdeas: (ideas) => set({ startupIdeas: ideas }),
+
+    // Auth
+    // Auth
+    isLoggedIn: false,
+    setIsLoggedIn: (value) => set({ isLoggedIn: value }),
 
     // Search & Filter
     searchQuery: '',
