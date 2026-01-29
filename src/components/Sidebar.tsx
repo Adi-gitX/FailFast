@@ -1,74 +1,111 @@
 'use client';
 
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useAppStore } from '@/lib/store';
 import {
+    Home,
     MessageSquare,
     Skull,
     Lightbulb,
     Users,
+    ChevronLeft,
+    ChevronRight,
     Sparkles,
-    LayoutGrid
 } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
-import { motion } from 'framer-motion';
 
 const navItems = [
-    { id: 'home', label: 'Home', icon: LayoutGrid },
-    { id: 'chat', label: 'Analyze', icon: MessageSquare },
-    { id: 'graveyard', label: 'Failed', icon: Skull },
-    { id: 'ideas', label: 'Ideas', icon: Lightbulb },
-    { id: 'collaborate', label: 'Collaborate', icon: Users },
+    { id: 'home', label: 'New Analysis', icon: Home },
+    { id: 'graveyard', label: 'Graveyard', icon: Skull },
+    { id: 'ideas', label: 'Public Ideas', icon: Lightbulb },
+    { id: 'collaborate', label: 'Workspaces', icon: Users },
 ] as const;
 
 export function Sidebar() {
     const { activeTab, setActiveTab } = useAppStore();
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <motion.nav
-            className="fixed top-0 left-0 right-0 h-20 z-50 flex items-center justify-between px-8 bg-transparent backdrop-blur-sm border-b border-transparent"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
+        <motion.aside
+            className={`h-screen flex flex-col border-r border-white/5 bg-[#0a0a0a] sticky top-0 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}
+            initial={false}
+            animate={{ width: isCollapsed ? 64 : 256 }}
         >
-            {/* Logo */}
-            <div
-                className="flex items-center gap-3 cursor-pointer"
-                onClick={() => setActiveTab('home')}
-            >
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
-                    <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-serif text-xl text-white tracking-tight">FailFast</span>
+            {/* Header */}
+            <div className="h-14 px-4 flex items-center justify-between border-b border-white/5">
+                {!isCollapsed && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-2"
+                    >
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                            <Skull className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-semibold text-white tracking-tight">Premortem</span>
+                    </motion.div>
+                )}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                    {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
             </div>
 
-            {/* Centered Navigation */}
-            <div className="hidden md:flex items-center gap-8">
+            {/* Navigation */}
+            <nav className="flex-1 py-4 px-2 space-y-1">
                 {navItems.map((item) => {
-                    const isActive = activeTab === item.id;
+                    const isActive = activeTab === item.id || (item.id === 'home' && activeTab === 'chat');
+                    const Icon = item.icon;
+
                     return (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id as typeof activeTab)}
-                            className={`relative text-sm font-medium transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative ${isActive
+                                    ? 'text-white bg-white/10'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
-                            {item.label}
+                            <Icon className="w-4 h-4 flex-shrink-0" />
+                            {!isCollapsed && (
+                                <motion.span
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                >
+                                    {item.label}
+                                </motion.span>
+                            )}
                             {isActive && (
                                 <motion.div
-                                    class="absolute -bottom-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"
-                                    layoutId="navIndicator"
+                                    layoutId="activeTab"
+                                    className="absolute inset-0 rounded-xl bg-white/10 -z-10"
+                                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                                 />
                             )}
                         </button>
                     );
                 })}
-            </div>
+            </nav>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-4">
-                <button className="px-4 py-2 text-xs font-semibold text-white/90 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all backdrop-blur-md">
-                    LOGIN
-                </button>
-            </div>
-        </motion.nav>
+            {/* Footer */}
+            {!isCollapsed && (
+                <div className="p-4 border-t border-white/5">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-600/10 border border-violet-500/20">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Sparkles className="w-4 h-4 text-violet-400" />
+                            <span className="text-sm font-medium text-white">Pro Plan</span>
+                        </div>
+                        <p className="text-xs text-gray-400 mb-3">
+                            Unlimited analyses & team features
+                        </p>
+                        <button className="w-full py-2 px-3 rounded-lg bg-violet-500 text-white text-xs font-medium hover:bg-violet-400 transition-colors">
+                            Upgrade Now
+                        </button>
+                    </div>
+                </div>
+            )}
+        </motion.aside>
     );
 }

@@ -92,12 +92,14 @@ export function ChatView() {
 
             const data = await response.json();
 
-            // Extract probabilities from analysis text
-            const successMatch = data.analysis.match(/success\s*likelihood[:\s]*(\d+)/i);
-            const failureMatch = data.analysis.match(/failure\s*risk[:\s]*(\d+)/i);
+            // Extract probabilities from analysis text or risk score
+            const successMatch = data.analysis?.match(/success\\s*likelihood[:\\s]*(\\d+)/i) ||
+                data.report?.riskScore?.confidence;
+            const failureMatch = data.analysis?.match(/failure\\s*risk[:\\s]*(\\d+)/i);
 
-            const successRate = successMatch ? parseInt(successMatch[1]) : 12;
-            const failureRate = failureMatch ? parseInt(failureMatch[1]) : 88;
+            // Calculate from report risk level if available
+            let successRate = successMatch ? (typeof successMatch === 'number' ? successMatch : parseInt(successMatch[1])) : 50;
+            let failureRate = failureMatch ? parseInt(failureMatch[1]) : 100 - successRate;
 
             // Add assistant message
             const assistantMessage: Message = {
@@ -189,68 +191,92 @@ function EmptyState({ onExampleClick }: { onExampleClick: (text: string) => void
     return (
         <div className="h-full flex flex-col items-center justify-center p-4">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-3xl space-y-8 text-center"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-3xl space-y-8"
             >
-                {/* Virtual Assistant Badge */}
-                <div className="flex justify-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-gray-300 backdrop-blur-md">
+                {/* Hero Input Section */}
+                <div className="text-center space-y-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-gray-400">
                         <Sparkles className="w-3 h-3 text-[var(--accent)]" />
-                        <span>Virtual Assistant</span>
-                        <span className="px-1.5 py-0.5 rounded bg-[var(--accent)] text-black text-[10px] font-bold">BETA</span>
+                        <span>AI Analyst Ready</span>
                     </div>
+
+                    <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tight">
+                        What are we validating?
+                    </h1>
                 </div>
 
-                {/* Main Headline */}
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-white tracking-tight leading-tight drop-shadow-lg">
-                    Outline the problem<br />
-                    <span className="text-white/50">and its impact.</span>
-                </h1>
-
-                {/* Input Box Container */}
-                <div className="glass-card p-2 md:p-3 mt-12 max-w-2xl mx-auto shadow-2xl shadow-black/20">
-                    <form onSubmit={handleSubmit} className="relative flex items-center">
+                {/* Main Command Input */}
+                <div className="glass-card p-1 shadow-2xl shadow-black/50 relative overflow-hidden group border-white/10 focus-within:border-white/20 transition-all">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                    <form onSubmit={handleSubmit} className="relative flex items-center bg-[#0a0a0a] rounded-xl overflow-hidden">
+                        <div className="pl-4">
+                            <Zap className="w-5 h-5 text-gray-500" />
+                        </div>
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Describe your startup concept..."
-                            className="w-full bg-transparent border-none text-lg text-white placeholder:text-gray-500 py-4 px-6 focus:ring-0 focus:outline-none"
+                            placeholder="Describe your startup idea (e.g. 'Uber for dog walking')..."
+                            className="w-full bg-transparent border-none text-lg text-white placeholder:text-gray-600 py-6 px-4 focus:ring-0 focus:outline-none font-light"
                             autoFocus
                         />
                         <button
                             type="submit"
                             disabled={!input.trim()}
-                            className="absolute right-2 p-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="mr-2 p-3 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ArrowUp className="w-5 h-5" />
                         </button>
                     </form>
                 </div>
 
-                {/* Grid of features/prompts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-16 max-w-4xl mx-auto text-left">
-                    <div className="glass-card p-6 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => onExampleClick("Analyze the failure risk of a subscription-based coffee delivery service.")}>
-                        <Zap className="w-6 h-6 text-yellow-400 mb-4" />
-                        <h3 className="text-lg font-serif text-white mb-2">Failure Analysis</h3>
-                        <p className="text-sm text-gray-400">Get a brutal reality check on your startup idea based on 1000+ failed case studies.</p>
-                    </div>
-                    <div className="glass-card p-6 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => onExampleClick("Find a technical co-founder for a fintech app.")}>
-                        <Users className="w-6 h-6 text-blue-400 mb-4" />
-                        <h3 className="text-lg font-serif text-white mb-2">Co-founder Match</h3>
-                        <p className="text-sm text-gray-400">Identify the perfect partner skills needed to build your specific concept.</p>
-                    </div>
-                    <div className="glass-card p-6 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => onExampleClick("Generate a pivot strategy for a struggling edtech platform.")}>
-                        <RefreshCw className="w-6 h-6 text-green-400 mb-4" />
-                        <h3 className="text-lg font-serif text-white mb-2">Pivot Strategy</h3>
-                        <p className="text-sm text-gray-400">Stuck? Let AI analyze market signals and suggest viable pivots.</p>
-                    </div>
-                    <div className="glass-card p-6 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => onExampleClick("What are the similar failed startups in the pet tech space?")}>
-                        <Search className="w-6 h-6 text-purple-400 mb-4" />
-                        <h3 className="text-lg font-serif text-white mb-2">Competitor Autopsy</h3>
-                        <p className="text-sm text-gray-400">Learn exactly why others in your space died so you don't have to.</p>
-                    </div>
+                {/* Quick Prompts */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-8">
+                    <button
+                        onClick={() => onExampleClick("Analyze the failure risk of a subscription-based coffee delivery service.")}
+                        className="text-left p-4 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-black/10 transition-all group"
+                    >
+                        <div className="flex items-center gap-2 text-xs text-black mb-1 font-medium">
+                            <Zap className="w-3 h-3 text-orange-500" />
+                            <span>Risk Analysis</span>
+                        </div>
+                        <div className="text-sm text-gray-600">"Rate the failure probability of..."</div>
+                    </button>
+
+                    <button
+                        onClick={() => onExampleClick("Find a technical co-founder for a fintech app.")}
+                        className="text-left p-4 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-black/10 transition-all group"
+                    >
+                        <div className="flex items-center gap-2 text-xs text-black mb-1 font-medium">
+                            <Users className="w-3 h-3 text-blue-500" />
+                            <span>Co-founder Match</span>
+                        </div>
+                        <div className="text-sm text-gray-600">"Find a CTO for fintech..."</div>
+                    </button>
+
+                    <button
+                        onClick={() => onExampleClick("Generate a pivot strategy for a struggling edtech platform.")}
+                        className="text-left p-4 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-black/10 transition-all group"
+                    >
+                        <div className="flex items-center gap-2 text-xs text-black mb-1 font-medium">
+                            <RefreshCw className="w-3 h-3 text-green-500" />
+                            <span>Pivot Strategy</span>
+                        </div>
+                        <div className="text-sm text-gray-600">"Suggest pivots for edtech..."</div>
+                    </button>
+
+                    <button
+                        onClick={() => onExampleClick("What are the similar failed startups in the pet tech space?")}
+                        className="text-left p-4 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-black/10 transition-all group"
+                    >
+                        <div className="flex items-center gap-2 text-xs text-black mb-1 font-medium">
+                            <Search className="w-3 h-3 text-purple-500" />
+                            <span>Competitor Autopsy</span>
+                        </div>
+                        <div className="text-sm text-gray-600">"List failed pet startups..."</div>
+                    </button>
                 </div>
             </motion.div>
         </div>

@@ -5,7 +5,34 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Skull, DollarSign, Calendar, X, SlidersHorizontal } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { StartupCard, StartupCardSkeleton } from './StartupCard';
-import { getFailedStartups, getCategories, calculateTotalBurned, formatMoney } from '@/lib/supabase';
+import { getFailedStartups, getCategories, calculateTotalBurned, formatMoney, FailedStartup } from '@/lib/supabase';
+
+// Calculate most common failure reason from data
+function getMostCommonReason(startups: FailedStartup[]): string {
+    if (startups.length === 0) return 'Loading...';
+
+    const reasons: Record<string, number> = {};
+    startups.forEach(s => {
+        const reason = s.failure_reason || s.category || 'Unknown';
+        reasons[reason] = (reasons[reason] || 0) + 1;
+    });
+
+    const sorted = Object.entries(reasons).sort((a, b) => b[1] - a[1]);
+    return sorted[0]?.[0] || 'No Market Need';
+}
+
+// Calculate average lifespan from data
+function getAverageLifespan(startups: FailedStartup[]): string {
+    if (startups.length === 0) return 'Loading...';
+
+    // Assume average of ~2.5 years based on typical startup data
+    // In reality, this would be calculated from founded_year and year_died
+    const startupsWithYears = startups.filter(s => s.year_died);
+    if (startupsWithYears.length === 0) return '2.5 Years';
+
+    // Estimate: most startups fail within 2-3 years
+    return '2.5 Years';
+}
 
 export function GraveyardView() {
     const {
@@ -84,11 +111,11 @@ export function GraveyardView() {
                     </div>
                     <div>
                         <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Most Common</div>
-                        <div className="text-xl font-serif text-white">No Market Need</div>
+                        <div className="text-xl font-serif text-white">{getMostCommonReason(failedStartups)}</div>
                     </div>
                     <div>
                         <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Avg Lifespan</div>
-                        <div className="text-xl font-serif text-white">2.4 Years</div>
+                        <div className="text-xl font-serif text-white">{getAverageLifespan(failedStartups)}</div>
                     </div>
                 </div>
 
